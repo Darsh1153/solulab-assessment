@@ -84,6 +84,3 @@ npm run start
 - Better formatting for amounts per currency (e.g., INR grouping) and more robust locale handling.
 - More realistic card input behavior (brand-specific grouping, max lengths, copy/paste handling edge cases).
 - Optional: a dedicated “transaction context” page state that restores the last viewed tx on refresh.
-
-## Deployment
-Not deployed yet. (If you deploy to Vercel, include the link here.)
