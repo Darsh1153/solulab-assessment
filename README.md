@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# solulab-assessment (Payment Gateway UI)
 
-## Getting Started
+Next.js (App Router) + TypeScript implementation of a **mock payment gateway UI** (no third‑party payment SDK). It simulates real payment-flow edge cases using a Next.js Route Handler and manages the lifecycle + history on the frontend.
 
-First, run the development server:
+## Features
+- **Payment form**: cardholder name, card number, expiry (MM/YY), CVV, amount, currency (INR/USD)
+- **Realtime validation** (per-field on blur, then as-you-type)
+- **Card handling**
+  - spaces every 4 digits while typing
+  - Visa / Mastercard / Amex detection + badge
+  - expiry rejects past dates
+  - CVV: 3 digits (4 for Amex)
+- **Live card preview** updating as you type
+- **Payment lifecycle**: Idle → Processing (~2s) → Success / Failed / Timeout
+- **Gateway simulation** via `POST /api/pay`
+  - ~60% success
+  - ~25% failed with reason
+  - ~15% delayed “timeout” response (8s)
+- **Frontend timeout handling**: cancels request after **6s** using `AbortController`
+- **Retry**: up to **3 attempts** per transaction, shows attempt count, reuses the same transaction ID
+- **Transaction history** persisted in **localStorage**, viewable at `/history` with details at `/tx/[id]`
+
+## Tech stack
+- Next.js **16.2.6** (App Router)
+- React **19**
+- TypeScript
+- Zustand (global store + persistence)
+- Tailwind CSS
+
+## Getting started
+
+### Prerequisites
+- Node.js: see `.nvmrc` (recommended) and `package.json#engines`
+
+If you use nvm:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+nvm install
+nvm use
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Install + run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open `http://localhost:3000`.
 
-## Learn More
+### Useful scripts
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run lint
+npm run build
+npm run start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Routes
+- **`/pay`**: payment form + card preview + lifecycle result screen
+- **`/history`**: persisted transaction history list
+- **`/tx/[id]`**: transaction details
+- **`/api/pay`**: mock gateway route handler
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
+- `src/app/` (App Router pages + API route)
+- `src/components/` (UI components)
+- `src/hooks/` (form + focus hooks)
+- `src/store/` (Zustand store with persistence)
+- `src/utils/` (formatting, validation, API call with AbortController)
+- `src/types/` (shared TypeScript types)
 
-## Deploy on Vercel
+## Assumptions
+- Only **Visa / Mastercard / Amex** are treated as supported brands.
+- Card validity uses:
+  - **length rules** per detected brand (Amex 15, others 16)
+  - **Luhn checksum** (common card-number validity check)
+- The mock gateway’s 8s delayed response is meant to simulate a slow gateway; the client aborts at 6s and shows **Timeout**.
+- History persistence is local to the browser/device via `localStorage` (no backend DB).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## What I would improve with more time
+- Add unit tests for `utils/validation.ts`, `utils/card.ts`, `utils/expiry.ts`.
+- Add E2E tests (Playwright) for the payment flow, retries, and persistence.
+- Better formatting for amounts per currency (e.g., INR grouping) and more robust locale handling.
+- More realistic card input behavior (brand-specific grouping, max lengths, copy/paste handling edge cases).
+- Optional: a dedicated “transaction context” page state that restores the last viewed tx on refresh.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+Not deployed yet. (If you deploy to Vercel, include the link here.)
